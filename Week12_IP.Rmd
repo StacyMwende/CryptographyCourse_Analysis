@@ -1,0 +1,255 @@
+---
+title: "Week12_IP"
+author: Stacy Mwende
+output: html_document
+---
+#Context
+A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. She currently targets audiences originating from various countries. In the past, she ran ads to advertise a related course on the same blog and collected data in the process. She would now like to employ your services as a Data Science Consultant to help her identify which individuals are most likely to click on her ads. 
+
+#Defining the question
+Identify the target group in this case, which the individuals who are likely to click on her ad
+
+#Metric for success
+Get the best variables that should be considered while posting the add to be enable maximum views which will translate to more people enrolling for the course.
+
+#Experimental Design
+I undertook three steps in my project: 
+Planning > Design >Analysis
+
+#Loading the dataset
+##Get the directory for the dataset
+```{r}
+getwd()
+```
+###Reading the dataset
+```{r}
+advertise <- read.csv("advertising.csv")
+head(advertise)
+```
+#Getting more information about the dataset
+```{r}
+nrow(advertise)
+```
+The dataset has 1000 entries
+
+```{r}
+NCOL(advertise)
+```
+The dataset has a total of 10 columns
+
+#Data Cleaning
+##Checking for null values
+```{r}
+sum(is.na(advertise))
+```
+There is no missing data in the dataset provided for analysis
+
+##Checking for duplicates
+```{r}
+duplicated_adv <- advertise[duplicated(advertise),]
+duplicated_adv
+```
+There are no duplicates in the dataset
+
+##Checking for outliers 
+
+```{r}
+OutVals = boxplot(advertise$
+Daily.Time.Spent.on.Site)
+```
+There are no outliers in the Daily.Time.Spent.on.Site column
+
+```{r}
+OutVals = boxplot(advertise$Age)
+```
+No outliers in the Age column
+```{r}
+OutVals = boxplot(advertise$Area.Income)
+```
+There are outliers in the Area.Income column. 
+```{r}
+OutVals = boxplot(advertise$
+Daily.Internet.Usage)
+```
+There are no outliers in the Daily internet usage column
+
+#Correcting wrongly labeled columns
+Get the column names
+```{r}
+colnames(advertise)
+```
+The column labelled Male should be Gender which will consist of Male and Female
+
+```{r}
+names(advertise)[names(advertise) == "Male"] <- "Gender"
+```
+
+```{r}
+colnames(advertise)
+```
+The column has been renamed to Gender as observed above
+
+**Checking if the data is balanced**
+We consider our target variable i.e Clicked.on.Ad
+```{r}
+Clicked.on.Ad_freq <- table(my_data$Clicked.on.Ad)
+barplot(Clicked.on.Ad_freq )
+```
+For the visualization above, the data is balanced in that equal number of people viewed and also an equal number did not view the Ad.
+
+#Getting a Summary of the dataset
+```{r}
+summary(my_data)
+```
+The summary code gives us a couple of outputs including Minimum,1st quartile,Median,Mean,3rd Quartile and the Maximum value.
+The different variables are distributed with the above stated output.
+
+**Checking the country that had more people visit the site**
+```{r}
+library(pander)
+my_data %>%
+    group_by(Country) %>%
+    summarize(frequency = n()) %>%
+    arrange(desc(frequency)) %>%
+    mutate(relative_frequency = frequency/sum(frequency)) %>%
+    pander
+```
+Czech Republic, France topped the list with Afghanistan and Australia following in the second place and the rest of the countries followed in order.
+
+#Performing Exploratory Data Analysis
+##Univariate Analysis
+Covert the dataframe to tibble for easier analysis
+```{r}
+library("tibble")
+my_data <- as_tibble(advertise)
+class(my_data)
+```
+
+###Measures of Central Tendency
+1.*Mean*
+```{r}
+mean(advertise$Daily.Time.Spent.on.Site)
+```
+People avearagely spent 65 minutes per day on the the site
+
+```{r}
+mean(advertise$Area.Income)
+```
+Average area income is 55,000 from the considered dataset
+
+```{r}
+mean(advertise$Daily.Internet.Usage)
+```
+Most people used an average of 180MBs per day on the very website in consideration
+
+```{r}
+library(dplyr)
+library(pander)
+my_data %>%
+    summarize(variable = "Age", mean_age = mean(Age), st_dev_age = sd(Age)) %>%
+    pander
+```
+Mean age of the people who visited the site was 36 years of age with a spread of 8 from the mean
+
+*Getting a quartile distribution of the Age column*
+```{r}
+my_data %>%
+    summarize(variable = "Age",
+              q0.25 = quantile(Age, 0.25),
+              q0.50 = quantile(Age, 0.50),
+              q0.75 = quantile(Age, 0.75),
+              q1 = quantile(Age, 1)) %>%
+    pander
+
+```
+The above distribution of quartiles shows the range of the age column showing that the least age of the people who visited the site was 29 years and the max age in that case was 61 years.
+
+*Visualizing the above age column in a ggplot as shown below*
+```{r}
+install.packages("ggplot2")
+library("ggplot2")
+library(dplyr)
+my_data %>%
+    ggplot(aes(Age)) +
+    geom_histogram(binwidth = 1.25, color = "black",fill = "grey") +
+    geom_vline(xintercept = mean(my_data$Age), lwd = 2) +
+    labs(title = "Distribution of Age",
+         x = "Age",
+         y = "Frequency distribution") +
+    theme_minimal() +
+    scale_x_continuous(breaks = seq(7.5,100,2.5))
+```
+
+###Bar Graph
+*Gender Column*
+```{r}
+Gender <- my_data$Gender
+Gender_freq <- table(Gender)
+barplot(Gender_freq)
+```
+
+From the visualization above, more females(0) visited the site compare to male counterparts(1)
+
+```{r}
+Clicked.on.Ad <- my_data$Clicked.on.Ad
+Clicked.on.Ad_freq <- table(Clicked.on.Ad)
+barplot(Clicked.on.Ad_freq)
+```
+The visualization above shows that there was equal distribution of the people who either viewed or did not view on the add.
+
+###Histogram
+```{r}
+Age_freq <- my_data$Age
+hist(Age_freq, main='Age', xlab = "Age",col = 'green')
+```
+The distribution of Age is skeweed to the lest meaning that most people who visited the site were of age group of between 25-50 years
+
+```{r}
+Area.Income_freq <- my_data$Area.Income
+#bins <- seq(10.5,99.5,by=10) 
+hist(Area.Income_freq , main='AreaIncome', xlab = "AreaIncome",col = 'green')
+```
+Area Income is skwed to the right with least countries having less than 50,000 of income
+
+##Bivariate Analysis
+*Covariance*
+Covariance is a number that reflects the degree to which two variable vary together
+**Daily.Time.Spent.on.Site Vs Age**
+```{r}
+Daily.Time.Spent.on.Site <- my_data$Daily.Time.Spent.on.Site
+Age <- my_data$Age
+cov(Daily.Time.Spent.on.Site, Age)
+```
+The above value indicates that there is a negative correlation between the 2 variables.
+This means that a change in either variable leads to a decrease in the other.
+
+**Age Vs Gender**
+```{r}
+Age <- my_data$Age
+Gender <- my_data$Gender
+cov(Age, Gender)
+```
+There is a negative relation between the 2 variables though not so big.
+
+**Clicked.on.Ad Vs Age**
+```{r}
+Clicked.on.Ad <- my_data$Clicked.on.Ad
+Age <- my_data$Age
+cov(Clicked.on.Ad, Age)
+```
+There is a positive relation between the 2 variables, in that an increase in one would increase the value of the other.
+
+#Multivariate Analysis
+```{r}
+library(ggcorrplot)
+my_data %>%
+    select_if(is.numeric) %>%
+    cor %>% 
+    ggcorrplot()
+
+```
+There is a high correlation between a variable and it's self which is normal
+There is also a highly relative correlation between DailyTimeSpentOnSite and the DailyInternetUsage
+We also observe a correlatio between Age and ClickedOnAd column
+There is no correlation between Gender and Age
+
